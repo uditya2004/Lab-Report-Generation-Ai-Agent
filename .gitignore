@@ -1,0 +1,7 @@
+.env
+node_modules
+report.md
+report.pdf
+package-lock.json
+plan.md
+workflow.md
