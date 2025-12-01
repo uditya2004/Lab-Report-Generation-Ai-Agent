@@ -274,14 +274,18 @@ async function generateReport(userInput) {
   console.log(`\n✅ Report generation complete!`);
   console.log("📄 Output saved to: report.md");
 
-  // Convert to PDF
-  await convertToPdf();
-
   return result;
 }
 
-// Example usage with headings specified
-const userInput = `
+// Export functions for server use
+export { generateReport, convertToPdf };
+
+// Run directly if this file is executed
+const isMainModule = import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}`;
+
+if (isMainModule) {
+  // Example usage with headings specified
+  const userInput = `
 Subject Name:- Software Engineering
 
 Generate a report for the following":
@@ -299,4 +303,5 @@ Experiments:
 4. Online Payroll processing application
 `;
 
-generateReport(userInput);
+  generateReport(userInput);
+}
