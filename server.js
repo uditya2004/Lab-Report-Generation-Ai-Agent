@@ -2,7 +2,8 @@ import express from "express";
 import path from "path";
 import fs from "fs/promises";
 import { fileURLToPath } from "url";
-import { generateReport, convertToPdf } from "./agent.js";
+import { generateReport } from "./agent.js";
+import { mdToPdf } from "md-to-pdf";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,12 +44,8 @@ ${experiments.map((exp, i) => `${i + 1}. ${exp}`).join("\n")}
 
     console.log("📥 Received request:", { subject, experiments, headings });
 
-    // Generate the report
-    await generateReport(userInput);
-
-    // Read the generated markdown
-    const mdPath = path.join(process.cwd(), "report.md");
-    const markdown = await fs.readFile(mdPath, "utf-8");
+    // Generate the report (returns markdown directly from memory)
+    const { markdown } = await generateReport(userInput);
 
     res.json({
       success: true,
@@ -78,21 +75,41 @@ app.get("/api/markdown", async (req, res) => {
 // Export to PDF endpoint
 app.post("/api/export-pdf", async (req, res) => {
   try {
-    const pdfPath = await convertToPdf();
+    const { markdown } = req.body;
 
-    if (!pdfPath) {
-      return res.status(500).json({ error: "Failed to generate PDF" });
+    if (!markdown) {
+      return res.status(400).json({ error: "No markdown content provided" });
     }
 
-    // Read the PDF file
-    const pdfBuffer = await fs.readFile(pdfPath);
+    // Convert markdown to PDF (in-memory)
+    const pdf = await mdToPdf(
+      { content: markdown },
+      {
+        pdf_options: {
+          format: "A4",
+          margin: {
+            top: "15mm",
+            bottom: "20mm",
+            left: "20mm",
+            right: "20mm",
+          },
+        },
+        stylesheet_url: new URL("file://" + path.join(__dirname, "styles.css")).href,
+        marked_options: {
+          headerIds: false,
+          mangle: false,
+        },
+        basedir: __dirname,
+        document_title: "Experiment Report",
+      }
+    );
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       'attachment; filename="experiment_report.pdf"'
     );
-    res.send(pdfBuffer);
+    res.send(pdf.content);
   } catch (error) {
     console.error("❌ Error exporting PDF:", error);
     res.status(500).json({ error: error.message });

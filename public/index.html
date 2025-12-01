@@ -508,6 +508,7 @@
       let headings = ["Aim", "Theory", "Functional Requirements", "Non-Functional Requirements"];
       let isGenerating = false;
       let eventSource = null;
+      let currentMarkdown = ""; // Store current markdown
 
       // DOM Elements
       const form = document.getElementById("reportForm");
@@ -609,6 +610,12 @@
           return;
         }
 
+        // Clear previous data
+        currentMarkdown = "";
+        markdownPreview.innerHTML = "";
+        emptyState.style.display = "flex";
+        markdownPreview.style.display = "none";
+
         isGenerating = true;
         generateBtn.disabled = true;
         exportBtn.disabled = true;
@@ -616,8 +623,8 @@
         progressFill.style.width = "0%";
         setStatus("generating", "Generating...");
 
-        // Start streaming
-        startStreaming();
+        // Remove streaming (not needed with in-memory storage)
+        // startStreaming();
 
         // Simulate progress
         let progress = 0;
@@ -644,6 +651,7 @@
 
           if (data.success) {
             renderMarkdown(data.markdown);
+            currentMarkdown = data.markdown; // Store markdown
             setStatus("complete", "Complete");
             exportBtn.disabled = false;
             progressText.textContent = "Report generated successfully!";
@@ -672,6 +680,11 @@
 
       // Export to PDF
       exportBtn.addEventListener("click", async () => {
+        if (!currentMarkdown) {
+          alert("Please generate a report first");
+          return;
+        }
+
         exportBtn.disabled = true;
         exportBtn.innerHTML = `
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -682,7 +695,11 @@
         `;
 
         try {
-          const response = await fetch("/api/export-pdf", { method: "POST" });
+          const response = await fetch("/api/export-pdf", { 
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ markdown: currentMarkdown })
+          });
 
           if (!response.ok) {
             throw new Error("Failed to export PDF");

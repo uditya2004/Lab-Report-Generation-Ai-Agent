@@ -28,24 +28,25 @@ setDefaultOpenAIClient(customClient);
 // const model = aisdk(google("gemini-2.5-flash"));
 const model = "openai/gpt-oss-120b";
 
-// TOOL: Append content to markdown file
-const appendToFileTool = tool({
+// In-memory storage for Vercel (serverless)
+let reportContent = "";
+
+// TOOL: Append content to markdown file (in-memory for Vercel)
+const createAppendTool = (storage) => tool({
   name: "append_to_file",
   description:
-    "Appends the generated experiment content to the report markdown file",
+    "Appends the generated experiment content to the report markdown",
   parameters: z.object({
-    content: z.string().describe("The markdown content to append to the file"),
+    content: z.string().describe("The markdown content to append"),
   }),
   execute: async ({ content }) => {
-    const filepath = path.join(process.cwd(), "report.md");
-
-    console.log(`🔨Writing to File report.md`);
+    console.log(`🔨Writing to memory`);
     try {
-      await fs.appendFile(filepath, content + "\n\n", "utf-8");
-      return `Successfully appended content to report.md`;
+      storage.content += content + "\n\n";
+      return `Successfully appended content`;
     } catch (error) {
-      console.error(`❌ Error writing to file: ${error.message}`);
-      return `Error writing to file: ${error.message}`;
+      console.error(`❌ Error writing: ${error.message}`);
+      return `Error writing: ${error.message}`;
     }
   },
 });
@@ -93,11 +94,11 @@ async function convertToPdf() {
   }
 }
 
-// Experiment Writer Agent (sub-agent)
-const experimentWriterAgent = new Agent({
+// Experiment Writer Agent (sub-agent) - factory function
+const createExperimentWriterAgent = (appendTool) => new Agent({
   name: "Experiment Writer",
   model: model,
-  tools: [appendToFileTool],
+  tools: [appendTool],
   instructions: `You are an expert technical writer specializing in academic experiment reports.
 
 ## Your Task
@@ -161,7 +162,7 @@ Write a detailed, well-structured experiment report section based on the experim
 });
 
 // TOOL:- Delegate One experiment at a time to Experiment Writer Agent
-const writeExperimentTool = tool({
+const createWriteExperimentTool = (writerAgent) => tool({
   name: "write_experiment",
   description:
     "Delegates writing of a single experiment to the Experiment Writer agent with specific headings",
@@ -207,16 +208,16 @@ ${headings.map((heading, index) => `${index + 1}. ${heading}`).join("\n")}
 - Use proper markdown formatting
 - Call append_to_file tool when done`;
 
-    const result = await run(experimentWriterAgent, prompt, { maxTurns: 10 });
+    const result = await run(writerAgent, prompt, { maxTurns: 10 });
     return `Experiment ${experiment_number} (${experiment_topic}) completed. Ready for next experiment.`;
   },
 });
 
-// Main orchestrator agent
-const orchestratorAgent = new Agent({
+// Main orchestrator agent - factory function
+const createOrchestratorAgent = (writeExpTool) => new Agent({
   name: "Report Orchestrator",
   model: model,
-  tools: [writeExperimentTool],
+  tools: [writeExpTool],
   instructions: `You are a report generation orchestrator managing experiment report creation.
 
 ## Your Responsibilities
@@ -249,32 +250,21 @@ const orchestratorAgent = new Agent({
 async function generateReport(userInput) {
   console.log("🚀 Starting report generation...\n");
 
-  // Clear report.md if it exists
-  const filepath = path.join(process.cwd(), "report.md");
-  try {
-    await fs.access(filepath);
-    await fs.writeFile(filepath, "", "utf-8");
-    console.log("🗑️  Cleared existing report.md\n");
-  } catch {
-    // File doesn't exist, do nothing
-  }
+  // Create storage for this session
+  const storage = { content: "" };
+  
+  // Create agents with in-memory storage
+  const appendTool = createAppendTool(storage);
+  const writerAgent = createExperimentWriterAgent(appendTool);
+  const writeExpTool = createWriteExperimentTool(writerAgent);
+  const orchestrator = createOrchestratorAgent(writeExpTool);
 
-  // Remove report.pdf if it exists
-  const pdfPath = path.join(process.cwd(), "report.pdf");
-  try {
-    await fs.access(pdfPath);
-    await fs.unlink(pdfPath);
-    console.log("🗑️  Removed existing report.pdf\n");
-  } catch {
-    // File doesn't exist, do nothing
-  }
-
-  const result = await run(orchestratorAgent, userInput, { maxTurns: 50 });
+  const result = await run(orchestrator, userInput, { maxTurns: 50 });
 
   console.log(`\n✅ Report generation complete!`);
-  console.log("📄 Output saved to: report.md");
+  console.log("📄 Report content stored in memory");
 
-  return result;
+  return { result, markdown: storage.content };
 }
 
 // Export functions for server use
