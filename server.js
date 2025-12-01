@@ -3,7 +3,6 @@ import path from "path";
 import fs from "fs/promises";
 import { fileURLToPath } from "url";
 import { generateReport } from "./agent.js";
-import { mdToPdf } from "md-to-pdf";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -72,48 +71,12 @@ app.get("/api/markdown", async (req, res) => {
   }
 });
 
-// Export to PDF endpoint
+// Export to PDF endpoint (deprecated - now handled client-side)
+// Keeping endpoint for backwards compatibility but returns error
 app.post("/api/export-pdf", async (req, res) => {
-  try {
-    const { markdown } = req.body;
-
-    if (!markdown) {
-      return res.status(400).json({ error: "No markdown content provided" });
-    }
-
-    // Convert markdown to PDF (in-memory)
-    const pdf = await mdToPdf(
-      { content: markdown },
-      {
-        pdf_options: {
-          format: "A4",
-          margin: {
-            top: "15mm",
-            bottom: "20mm",
-            left: "20mm",
-            right: "20mm",
-          },
-        },
-        stylesheet_url: new URL("file://" + path.join(__dirname, "styles.css")).href,
-        marked_options: {
-          headerIds: false,
-          mangle: false,
-        },
-        basedir: __dirname,
-        document_title: "Experiment Report",
-      }
-    );
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      'attachment; filename="experiment_report.pdf"'
-    );
-    res.send(pdf.content);
-  } catch (error) {
-    console.error("❌ Error exporting PDF:", error);
-    res.status(500).json({ error: error.message });
-  }
+  res.status(400).json({ 
+    error: "PDF export is now handled client-side. Please refresh the page." 
+  });
 });
 
 // Stream markdown updates (for live preview)

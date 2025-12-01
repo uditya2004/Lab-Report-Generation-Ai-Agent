@@ -456,7 +456,7 @@
             <button
               type="button"
               class="btn btn-secondary"
-              id="exportBtn"
+              id="copyBtn"
               disabled
             >
               <svg
@@ -467,9 +467,10 @@
                 stroke="currentColor"
                 stroke-width="2"
               >
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
               </svg>
-              Export to PDF
+              Copy Markdown
             </button>
           </form>
         </div>
@@ -513,7 +514,7 @@
       // DOM Elements
       const form = document.getElementById("reportForm");
       const generateBtn = document.getElementById("generateBtn");
-      const exportBtn = document.getElementById("exportBtn");
+      const copyBtn = document.getElementById("copyBtn");
       const headingsInput = document.getElementById("headingsInput");
       const headingField = document.getElementById("headingField");
       const markdownPreview = document.getElementById("markdownPreview");
@@ -618,7 +619,7 @@
 
         isGenerating = true;
         generateBtn.disabled = true;
-        exportBtn.disabled = true;
+        copyBtn.disabled = true;
         progressContainer.classList.add("visible");
         progressFill.style.width = "0%";
         setStatus("generating", "Generating...");
@@ -653,7 +654,7 @@
             renderMarkdown(data.markdown);
             currentMarkdown = data.markdown; // Store markdown
             setStatus("complete", "Complete");
-            exportBtn.disabled = false;
+            copyBtn.disabled = false;
             progressText.textContent = "Report generated successfully!";
           } else {
             throw new Error(data.error);
@@ -678,52 +679,37 @@
         }
       });
 
-      // Export to PDF
-      exportBtn.addEventListener("click", async () => {
+      // Copy Markdown to clipboard
+      copyBtn.addEventListener("click", async () => {
         if (!currentMarkdown) {
           alert("Please generate a report first");
           return;
         }
 
-        exportBtn.disabled = true;
-        exportBtn.innerHTML = `
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 6v6l4 2"/>
-          </svg>
-          Exporting...
-        `;
-
         try {
-          const response = await fetch("/api/export-pdf", { 
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ markdown: currentMarkdown })
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to export PDF");
-          }
-
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "experiment_report.pdf";
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          a.remove();
-        } catch (error) {
-          alert("Error exporting PDF: " + error.message);
-        } finally {
-          exportBtn.disabled = false;
-          exportBtn.innerHTML = `
+          await navigator.clipboard.writeText(currentMarkdown);
+          
+          // Show success feedback
+          const originalHTML = copyBtn.innerHTML;
+          copyBtn.innerHTML = `
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+              <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
-            Export to PDF
+            Copied!
           `;
+          copyBtn.style.background = "var(--success)";
+          copyBtn.style.borderColor = "var(--success)";
+          copyBtn.style.color = "white";
+          
+          setTimeout(() => {
+            copyBtn.innerHTML = originalHTML;
+            copyBtn.style.background = "";
+            copyBtn.style.borderColor = "";
+            copyBtn.style.color = "";
+          }, 2000);
+        } catch (error) {
+          console.error("Copy failed:", error);
+          alert("Failed to copy to clipboard");
         }
       });
 
