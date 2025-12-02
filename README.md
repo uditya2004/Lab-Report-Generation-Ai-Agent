@@ -11,7 +11,7 @@ An AI-powered web application that automatically generates professional academic
 - **AI-Powered Content Generation**: Leverages advanced LLMs to generate comprehensive experiment reports
 - **Multi-Agent Architecture**: Orchestrator and Writer agents work together for optimal results
 - **Live Markdown Preview**: Real-time rendering of generated content
-- **PDF Export**: One-click conversion to professional PDF documents
+- **Copy Markdown**: One-click copy complete markdown 
 - **Customizable Headings**: Define your own report structure
 - **Sequential Processing**: Ensures experiments are written one at a time with progress tracking
 - **Minimalist UI**: Clean, professional interface without shadows
