@@ -414,11 +414,11 @@
               <div class="tag-input" id="headingsInput">
                 <input
                   type="text"
-                  placeholder="Type and press Enter"
+                  placeholder="Type and add comma"
                   id="headingField"
                 />
               </div>
-              <p class="hint">Press Enter to add each heading</p>
+              <p class="hint">Add comma to create each heading</p>
             </div>
 
             <div class="form-group">
@@ -547,7 +547,7 @@
       }
 
       headingField.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
+        if (e.key === ",") {
           e.preventDefault();
           const value = headingField.value.trim();
           if (value && !headings.includes(value)) {
