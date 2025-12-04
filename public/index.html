@@ -546,6 +546,7 @@
         btn.parentElement.remove();
       }
 
+      // Handle comma on desktop (keydown)
       headingField.addEventListener("keydown", (e) => {
         if (e.key === ",") {
           e.preventDefault();
@@ -555,6 +556,19 @@
             addHeadingTag(value);
             headingField.value = "";
           }
+        }
+      });
+
+      // Handle comma on mobile (input event fallback)
+      headingField.addEventListener("input", (e) => {
+        const val = headingField.value;
+        if (val.includes(",")) {
+          const value = val.replace(/,/g, "").trim();
+          if (value && !headings.includes(value)) {
+            headings.push(value);
+            addHeadingTag(value);
+          }
+          headingField.value = "";
         }
       });
 
