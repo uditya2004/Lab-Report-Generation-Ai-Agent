@@ -249,7 +249,6 @@ This project is licensed under the ISC License.
 - [OpenAI Agents SDK](https://github.com/openai/agents-sdk) for the agent framework
 - [Groq](https://groq.com/) for lightning-fast LLM inference
 - [Marked.js](https://marked.js.org/) for markdown rendering
-- [md-to-pdf](https://github.com/simonhaenisch/md-to-pdf) for PDF generation
 
 ## 📊 Performance
 
