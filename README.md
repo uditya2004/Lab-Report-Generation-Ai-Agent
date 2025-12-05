@@ -245,17 +245,6 @@ This project is licensed under the ISC License.
 - Token efficiency: ~200k tokens for comprehensive reports
 - Concurrent requests: Supported via Express.js
 
-## 🔮 Future Enhancements
-
-- [ ] Support for diagrams and UML charts
-- [ ] Multiple export formats (DOCX, HTML)
-- [ ] Template management system
-- [ ] Collaborative editing
-- [ ] Version history
-- [ ] Batch processing
-- [ ] Cloud storage integration
-- [ ] Multi-language support
-
 ---
 
 **Made with ❤️ using AI**
