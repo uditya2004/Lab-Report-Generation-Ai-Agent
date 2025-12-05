@@ -52,7 +52,6 @@ The application uses a hierarchical multi-agent system:
 | **LLM Provider** | Groq (gpt-oss-120b) |
 | **Frontend** | HTML5, Vanilla JavaScript |
 | **Markdown Rendering** | Marked.js |
-| **PDF Generation** | md-to-pdf |
 | **Validation** | Zod |
 
 ## 📁 Project Structure
@@ -63,7 +62,6 @@ report-generator/
 ├── server.js                # Express server & API endpoints
 ├── public/
 │   └── index.html          # Web UI
-├── styles.css              # PDF styling
 ├── package.json            # Dependencies & scripts
 ├── .env                    # Environment variables
 └── README.md              # Documentation
@@ -114,7 +112,6 @@ report-generator/
 2. **Add Headings**: Type and press Enter to add custom headings (default: Aim, Theory, Functional Requirements, Non-Functional Requirements)
 3. **List Experiments**: Enter one experiment per line
 4. **Generate Report**: Click "Generate Report" and watch the magic happen
-5. **Export to PDF**: Once complete, click "Export to PDF" to download
 
 ### Command Line (Direct Agent Execution)
 
@@ -127,12 +124,6 @@ Edit the `userInput` in `agent.js` to customize the report parameters.
 ## 🎨 Customization
 
 ### Styling
-
-Modify `styles.css` to customize PDF appearance:
-- Font sizes
-- Colors
-- Margins
-- Typography
 
 ### Headings
 
@@ -156,7 +147,6 @@ const model = "openai/gpt-oss-120b"; // Current
 | `/` | GET | Serve web interface |
 | `/api/generate` | POST | Generate experiment report |
 | `/api/markdown` | GET | Get current markdown content |
-| `/api/export-pdf` | POST | Export report to PDF |
 | `/api/stream` | GET | Server-Sent Events for live updates |
 
 ### Example API Request
@@ -189,7 +179,6 @@ Content-Type: application/json
 3. **Content Generation**: Writer agent creates detailed content following markdown rules
 4. **File Appending**: Each experiment is appended to `report.md` incrementally
 5. **Progress Tracking**: Real-time progress updates (e.g., 1/4, 2/4, 3/4, 4/4)
-6. **PDF Conversion**: On-demand conversion using `md-to-pdf` with custom styling
 
 ### Key Features
 
