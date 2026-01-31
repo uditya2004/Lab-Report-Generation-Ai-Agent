@@ -71,14 +71,6 @@ app.get("/api/markdown", async (req, res) => {
   }
 });
 
-// Export to PDF endpoint (deprecated - now handled client-side)
-// Keeping endpoint for backwards compatibility but returns error
-app.post("/api/export-pdf", async (req, res) => {
-  res.status(400).json({ 
-    error: "PDF export is now handled client-side. Please refresh the page." 
-  });
-});
-
 // Stream markdown updates (for live preview)
 app.get("/api/stream", async (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");

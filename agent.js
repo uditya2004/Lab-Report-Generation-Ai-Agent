@@ -12,7 +12,6 @@ import { z } from "zod";
 import path from "path";
 import fs from "fs/promises";
 import OpenAI from "openai";
-import { mdToPdf } from "md-to-pdf";
 
 // Disable OpenAI tracing to suppress the warning message
 setTracingDisabled(true);
@@ -50,49 +49,6 @@ const createAppendTool = (storage) => tool({
     }
   },
 });
-
-// TOOL: Convert to pdf:
-async function convertToPdf() {
-  const mdPath = path.join(process.cwd(), "report.md");
-  const pdfPath = path.join(process.cwd(), "report.pdf");
-
-  try {
-    await fs.access(mdPath);
-
-    console.log("📄 Converting to PDF...");
-
-    const pdf = await mdToPdf(
-      { path: mdPath },
-      {
-        dest: pdfPath,
-        pdf_options: {
-          format: "A4",
-          margin: {
-            top: "15mm",
-            bottom: "20mm",
-            left: "20mm",
-            right: "20mm",
-          },
-        },
-        stylesheet: path.join(process.cwd(), "styles.css"), // Optional
-        // Skip YAML front matter parsing to avoid --- separator issues
-        marked_options: {
-          headerIds: false,
-          mangle: false,
-        },
-        // Disable gray-matter YAML parsing
-        basedir: process.cwd(),
-        document_title: "Experiment Report",
-      }
-    );
-
-    console.log("✅ PDF saved to: report.pdf");
-    return pdfPath;
-  } catch (error) {
-    console.error(`❌ Error converting to PDF: ${error.message}`);
-    return null;
-  }
-}
 
 // Experiment Writer Agent (sub-agent) - factory function
 const createExperimentWriterAgent = (appendTool) => new Agent({
@@ -268,7 +224,7 @@ async function generateReport(userInput) {
 }
 
 // Export functions for server use
-export { generateReport, convertToPdf };
+export { generateReport };
 
 // Run directly if this file is executed
 const isMainModule = import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}`;
